@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamil Melody Player</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #09111f;
+            --panel: rgba(10, 20, 38, 0.82);
+            --panel-strong: rgba(16, 28, 52, 0.95);
+            --line: rgba(255, 255, 255, 0.1);
+            --text: #eef4ff;
+            --muted: #9eb0cc;
+            --accent: #69e4c9;
+            --accent-2: #ffb86c;
+            --shadow: 0 24px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Manrope', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(105, 228, 201, 0.18), transparent 30%),
+                radial-gradient(circle at top right, rgba(255, 184, 108, 0.16), transparent 28%),
+                linear-gradient(135deg, #07101c 0%, #0d1a2f 48%, #09111f 100%);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 32px 32px;
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), transparent 85%);
+            pointer-events: none;
+        }
+
+        .app-shell {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.4fr 0.8fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .hero-card,
+        .stats-card,
+        .library-panel,
+        .player-panel {
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow);
+        }
+
+        .hero-card {
+            padding: 28px;
+            background:
+                linear-gradient(135deg, rgba(105, 228, 201, 0.14), rgba(255, 184, 108, 0.1)),
+                var(--panel-strong);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 18px 0 10px;
+            font-size: clamp(2rem, 4vw, 3.6rem);
+            line-height: 1;
+        }
+
+        .hero-card p {
+            margin: 0;
+            max-width: 720px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        .search-row {
+            display: grid;
+            grid-template-columns: 1.6fr 0.8fr;
+            gap: 14px;
+            margin-top: 24px;
+        }
+
+        .field {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .field span {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        input,
+        select,
+        button {
+            font: inherit;
+        }
+
+        input,
+        select {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+        }
+
+        select option {
+            color: #06101d;
+        }
+
+        .stats-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            padding: 18px;
+        }
+
+        .stat-box {
+            padding: 18px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-box strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 2rem;
+        }
+
+        .stat-box span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.85fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .library-panel,
+        .player-panel {
+            padding: 20px;
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .panel-head h2,
+        .panel-head h3 {
+            margin: 0;
+            font-size: 1.15rem;
+        }
+
+        .panel-head p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .artist-chip {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(105, 228, 201, 0.12);
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .group {
+            margin-bottom: 26px;
+        }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .group-title {
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        .group-count {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            position: relative;
+            overflow: hidden;
+            padding: 14px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+            transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(105, 228, 201, 0.35);
+            box-shadow: 0 18px 26px rgba(0, 0, 0, 0.2);
+        }
+
+        .card.active {
+            border-color: rgba(105, 228, 201, 0.6);
+            box-shadow: 0 0 0 1px rgba(105, 228, 201, 0.2), 0 22px 30px rgba(0, 0, 0, 0.24);
+        }
+
+        .cover {
+            height: 154px;
+            border-radius: 20px;
+            display: grid;
+            place-items: end start;
+            padding: 16px;
+            font-size: 2.3rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: rgba(255, 255, 255, 0.96);
+        }
+
+        .card h4 {
+            margin: 14px 0 6px;
+            font-size: 1rem;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .play-pill {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 42px;
+            height: 42px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(9, 17, 31, 0.7);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+        }
+
+        .player-panel {
+            position: sticky;
+            top: 20px;
+        }
+
+        .now-art {
+            height: 220px;
+            border-radius: 28px;
+            padding: 22px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .now-art h3,
+        .now-art p {
+            margin: 0;
+        }
+
+        .now-art p {
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .badge {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(9, 17, 31, 0.28);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .track-meta {
+            margin-bottom: 16px;
+        }
+
+        .track-meta h3 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .track-meta p {
+            margin: 6px 0 0;
+            color: var(--muted);
+        }
+
+        .status-text {
+            min-height: 20px;
+            margin: 0 0 10px;
+            color: var(--accent-2);
+            font-size: 13px;
+        }
+
+        audio {
+            width: 100%;
+            margin: 12px 0;
+            filter: saturate(0.95);
+        }
+
+        #progress {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+
+        .time-row,
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .time-row {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .control-row {
+            margin: 18px 0 24px;
+        }
+
+        .control-row button {
+            border: none;
+            cursor: pointer;
+            color: var(--text);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .control-row button:hover {
+            transform: translateY(-1px);
+        }
+
+        .mini-btn,
+        .main-btn {
+            display: grid;
+            place-items: center;
+            border-radius: 20px;
+        }
+
+        .mini-btn {
+            width: 58px;
+            height: 58px;
+            background: rgba(255, 255, 255, 0.07);
+            font-size: 22px;
+        }
+
+        .main-btn {
+            flex: 1;
+            height: 58px;
+            background: linear-gradient(135deg, var(--accent), #33b8ff);
+            color: #032237;
+            font-weight: 800;
+            font-size: 15px;
+        }
+
+        .recent-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0 0;
+            display: grid;
+            gap: 10px;
+        }
+
+        .recent-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+        }
+
+        .recent-list li span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .empty-state {
+            padding: 28px;
+            border-radius: 22px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--muted);
+        }
+
+        @media (max-width: 1100px) {
+
+            .hero,
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .player-panel {
+                position: static;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .app-shell {
+                padding: 16px;
+            }
+
+            .hero-card,
+            .stats-card,
+            .library-panel,
+            .player-panel {
+                border-radius: 24px;
+            }
+
+            .search-row,
+            .stats-card {
+                grid-template-columns: 1fr;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cover {
+                height: 140px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <section class="hero">
+            <div class="hero-card">
+                <div class="eyebrow">Tamil Hits Collection</div>
+                <h1>Browse your singers, queue the next track, and keep the vibe going.</h1>
+                <p>
+                    Your player now includes the missing Unnikrishnan, Benny Dayal, and Shankar Mahadevan songs,
+                    while keeping search, artist filtering, recent history, progress scrub, and next or previous
+                    playback.
+                </p>
+
+                <div class="search-row">
+                    <label class="field">
+                        <span>Search</span>
+                        <input type="text" id="search" placeholder="Search songs...">
+                    </label>
+                    <label class="field">
+                        <span>Artist</span>
+                        <select id="artistFilter"></select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <div class="stat-box">
+                    <span>Total songs</span>
+                    <strong id="songCount">0</strong>
+                </div>
+                <div class="stat-box">
+                    <span>Artists</span>
+                    <strong id="artistCount">0</strong>
+                </div>
+                <div class="stat-box">
+                    <span>Now selected</span>
+                    <strong id="currentSongStat">None</strong>
+                </div>
+                <div class="stat-box">
+                    <span>Recent tracks</span>
+                    <strong id="recentCount">0</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="layout">
+            <div class="library-panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Library</h2>
+                        <p>Grouped by singer for quick browsing.</p>
+                    </div>
+                    <div class="artist-chip" id="resultSummary">All artists</div>
+                </div>
+                <div id="playlist"></div>
+            </div>
+
+            <aside class="player-panel">
+                <div class="panel-head">
+                    <div>
+                        <h3>Now Playing</h3>
+                        <p>Playback controls and recent history.</p>
+                    </div>
+                </div>
+
+                <div class="now-art" id="nowArt">
+                    <div>
+                        <div class="badge">Ready</div>
+                        <p>Pick a song to start playback</p>
+                    </div>
+                </div>
+
+                <div class="track-meta">
+                    <h3 id="title">None</h3>
+                    <p id="artist">No artist selected</p>
+                </div>
+
+                <p class="status-text" id="statusText"></p>
+                <audio id="audioPlayer" controls></audio>
+                <input type="range" id="progress" value="0" min="0" max="100">
+
+                <div class="time-row">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+
+                <div class="control-row">
+                    <button class="mini-btn" type="button" onclick="prevSong()"
+                        aria-label="Previous song">&#9198;</button>
+                    <button class="main-btn" type="button" onclick="togglePlay()">Play / Pause</button>
+                    <button class="mini-btn" type="button" onclick="nextSong()" aria-label="Next song">&#9197;</button>
+                </div>
+
+                <div class="panel-head">
+                    <div>
+                        <h3>Recently Played</h3>
+                        <p>Tap a track to replay it.</p>
+                    </div>
+                </div>
+                <ul class="recent-list" id="recent"></ul>
+            </aside>
+        </section>
+    </div>
+
+    <script>
+        const data = [
+            {
+                artist: "Hariharan",
+                songs: [
+                    { title: "Entha Thesathil", src: "songs/song3.mp3" },
+                    { title: "Ennavo Ennavo", src: "songs/song4.mp3" },
+                    { title: "Maan Kuttiye", src: "songs/song5.mp3" },
+                    { title: "Thavam Indri", src: "songs/song14.mp3" },
+                    { title: "Chitraiyae Adi Chitraiyae", src: "songs/song9.mp3" }
+                ]
+            },
+            {
+                artist: "Harish Raghavendra",
+                songs: [
+                    { title: "Azhagiya Theeye", src: "songs/song1.mp3" },
+                    { title: "Sakkarai Nilave", src: "songs/song11.mp3" }
+                ]
+            },
+            {
+                artist: "SPB",
+                songs: [
+                    { title: "Muthumani Maalai", src: "songs/song6.mp3" },
+                    { title: "Sollavaa Sollavaa", src: "songs/song13.mp3" }
+                ]
+            },
+            {
+                artist: "P. Unnikrishnan",
+                songs: [
+                    { title: "Sil Sil Silala", src: "songs/song12.mp3" },
+                    { title: "Vanathu Nilaveduthu", src: "songs/song15.mp3" }
+                ]
+            },
+            {
+                artist: "Benny Dayal",
+                songs: [
+                    { title: "Kathaigalai Pesum", src: "songs/song8.mp3" }
+                ]
+            },
+            {
+                artist: "Shankar Mahadevan",
+                songs: [
+                    { title: "Enna Solla Pogirai", src: "songs/song2.mp3" }
+                ]
+            },
+            {
+                artist: "K. J. Yesudas",
+                songs: [
+                    { title: "Malligaiye Malligaiye Thoothaga", src: "songs/song10.mp3" }
+                ]
+            },
+            {
+                artist: "Mano",
+                songs: [
+                    { title: "Kattu Kuyil Pattu", src: "songs/song7.mp3" }
+                ]
+            }
+        ];
+
+        let recent = JSON.parse(localStorage.getItem("recentSongs")) || [];
+        let flatSongs = [];
+        let currentIndex = -1;
+        let activeArtist = "All";
+        let activeSearch = "";
+
+        const gradients = [
+            "linear-gradient(135deg, #2dd4bf, #0f766e)",
+            "linear-gradient(135deg, #f59e0b, #ea580c)",
+            "linear-gradient(135deg, #60a5fa, #1d4ed8)",
+            "linear-gradient(135deg, #f472b6, #be185d)",
+            "linear-gradient(135deg, #a78bfa, #5b21b6)",
+            "linear-gradient(135deg, #34d399, #15803d)",
+            "linear-gradient(135deg, #fb7185, #be123c)",
+            "linear-gradient(135deg, #38bdf8, #0f766e)"
+        ];
+
+        const audio = document.getElementById("audioPlayer");
+        const progress = document.getElementById("progress");
+        const statusText = document.getElementById("statusText");
+
+        function buildFlatSongs() {
+            flatSongs = [];
+            data.forEach((group, groupIndex) => {
+                group.songs.forEach(song => {
+                    flatSongs.push({
+                        ...song,
+                        artist: group.artist,
+                        gradient: gradients[groupIndex % gradients.length]
+                    });
+                });
+            });
+        }
+
+        function getCardArt(song, artist, gradient) {
+            const initials = song.title
+                .split(" ")
+                .slice(0, 2)
+                .map(word => word[0])
+                .join("")
+                .toUpperCase();
+
+            return `
+                <div class="cover" style="background:${gradient}">
+                    <div>
+                        <div>${initials}</div>
+                        <p>${artist}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateSummary(list) {
+            const visibleArtists = list.length;
+            const visibleSongs = list.reduce((sum, group) => sum + group.songs.length, 0);
+            document.getElementById("resultSummary").textContent = `${visibleSongs} songs • ${visibleArtists} artists`;
+        }
+
+        function updateStats() {
+            document.getElementById("songCount").textContent = flatSongs.length;
+            document.getElementById("artistCount").textContent = data.length;
+            document.getElementById("recentCount").textContent = recent.length;
+
+            const currentSong = flatSongs[currentIndex];
+            document.getElementById("currentSongStat").textContent = currentSong ? currentSong.title : "None";
+        }
+
+        function syncNowPlaying(song) {
+            const nowArt = document.getElementById("nowArt");
+
+            if (!song) {
+                nowArt.style.background = "linear-gradient(135deg, rgba(105, 228, 201, 0.25), rgba(51, 184, 255, 0.22))";
+                nowArt.innerHTML = `
+                    <div>
+                        <div class="badge">Ready</div>
+                        <p>Pick a song to start playback</p>
+                    </div>
+                `;
+                return;
+            }
+
+            nowArt.style.background = song.gradient;
+            nowArt.innerHTML = `
+                <div>
+                    <div class="badge">Now Playing</div>
+                    <h3>${song.title}</h3>
+                    <p>${song.artist}</p>
+                </div>
+            `;
+        }
+
+        function playSong(song, artist) {
+            currentIndex = flatSongs.findIndex(item => item.src === song.src);
+            const currentSong = flatSongs[currentIndex];
+
+            document.getElementById("title").textContent = song.title;
+            document.getElementById("artist").textContent = artist;
+            statusText.textContent = "";
+
+            audio.pause();
+            audio.src = song.src;
+            audio.currentTime = 0;
+            audio.load();
+
+            const playAttempt = audio.play();
+            if (playAttempt && typeof playAttempt.catch === "function") {
+                playAttempt.catch(() => {
+                    statusText.textContent = `Unable to play "${song.title}". Please try again.`;
+                });
+            }
+
+            recent = [song.src, ...recent.filter(src => src !== song.src)].slice(0, 5);
+            localStorage.setItem("recentSongs", JSON.stringify(recent));
+
+            syncNowPlaying(currentSong);
+            renderRecent();
+            render(getFilteredData());
+            updateStats();
+        }
+
+        function nextSong() {
+            if (!flatSongs.length) {
+                return;
+            }
+
+            currentIndex = (currentIndex + 1 + flatSongs.length) % flatSongs.length;
+            const song = flatSongs[currentIndex];
+            playSong(song, song.artist);
+        }
+
+        function prevSong() {
+            if (!flatSongs.length) {
+                return;
+            }
+
+            currentIndex = (currentIndex - 1 + flatSongs.length) % flatSongs.length;
+            const song = flatSongs[currentIndex];
+            playSong(song, song.artist);
+        }
+
+        function togglePlay() {
+            if (!audio.src) {
+                nextSong();
+                return;
+            }
+
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+        }
+
+        audio.addEventListener("ended", nextSong);
+        audio.addEventListener("error", () => {
+            const failedSong = flatSongs[currentIndex];
+            statusText.textContent = failedSong
+                ? `Playback error for "${failedSong.title}".`
+                : "Playback error.";
+        });
+
+        audio.addEventListener("timeupdate", () => {
+            progress.value = (audio.currentTime / audio.duration) * 100 || 0;
+            document.getElementById("currentTime").textContent = formatTime(audio.currentTime);
+            document.getElementById("duration").textContent = formatTime(audio.duration);
+        });
+
+        progress.addEventListener("input", event => {
+            audio.currentTime = (event.target.value / 100) * audio.duration;
+        });
+
+        function formatTime(timeValue) {
+            if (!timeValue || Number.isNaN(timeValue)) {
+                return "0:00";
+            }
+
+            const minutes = Math.floor(timeValue / 60);
+            const seconds = Math.floor(timeValue % 60).toString().padStart(2, "0");
+            return `${minutes}:${seconds}`;
+        }
+
+        function getFilteredData() {
+            return data
+                .filter(group => activeArtist === "All" || group.artist === activeArtist)
+                .map(group => ({
+                    ...group,
+                    songs: group.songs.filter(song => song.title.toLowerCase().includes(activeSearch))
+                }))
+                .filter(group => group.songs.length > 0);
+        }
+
+        function render(list) {
+            const container = document.getElementById("playlist");
+            container.innerHTML = "";
+            updateSummary(list);
+
+            if (!list.length) {
+                container.innerHTML = `<div class="empty-state">No songs matched your search. Try another title or artist.</div>`;
+                return;
+            }
+
+            list.forEach(group => {
+                const div = document.createElement("section");
+                div.className = "group";
+
+                const currentGroupIndex = data.findIndex(item => item.artist === group.artist);
+                const gradient = gradients[currentGroupIndex % gradients.length];
+
+                div.innerHTML = `
+                    <div class="group-header">
+                        <h3 class="group-title">${group.artist}</h3>
+                        <span class="group-count">${group.songs.length} song${group.songs.length > 1 ? "s" : ""}</span>
+                    </div>
+                `;
+
+                const grid = document.createElement("div");
+                grid.className = "grid";
+
+                group.songs.forEach(song => {
+                    const card = document.createElement("article");
+                    const active = currentIndex !== -1 && flatSongs[currentIndex].src === song.src;
+                    card.className = `card${active ? " active" : ""}`;
+                    card.innerHTML = `
+                        ${getCardArt(song, group.artist, gradient)}
+                        <button class="play-pill" type="button" aria-label="Play ${song.title}">&#9654;</button>
+                        <h4>${song.title}</h4>
+                        <p>${group.artist}</p>
+                    `;
+                    card.onclick = () => playSong(song, group.artist);
+                    grid.appendChild(card);
+                });
+
+                div.appendChild(grid);
+                container.appendChild(div);
+            });
+        }
+
+        function initFilter() {
+            const select = document.getElementById("artistFilter");
+            select.innerHTML = "";
+
+            ["All", ...data.map(group => group.artist)].forEach(artistName => {
+                const option = document.createElement("option");
+                option.value = artistName;
+                option.textContent = artistName;
+                select.appendChild(option);
+            });
+
+            select.addEventListener("change", event => {
+                activeArtist = event.target.value;
+                render(getFilteredData());
+            });
+        }
+
+        document.getElementById("search").addEventListener("input", event => {
+            activeSearch = event.target.value.trim().toLowerCase();
+            render(getFilteredData());
+        });
+
+        function renderRecent() {
+            const list = document.getElementById("recent");
+            list.innerHTML = "";
+
+            if (!recent.length) {
+                list.innerHTML = `<li><strong>No recent songs yet</strong><span>Play something from the library</span></li>`;
+                updateStats();
+                return;
+            }
+
+            recent.forEach(src => {
+                const song = flatSongs.find(item => item.src === src);
+                if (!song) {
+                    return;
+                }
+
+                const item = document.createElement("li");
+                item.innerHTML = `<strong>${song.title}</strong><span>${song.artist}</span>`;
+                item.onclick = () => playSong(song, song.artist);
+                list.appendChild(item);
+            });
+
+            updateStats();
+        }
+
+        buildFlatSongs();
+        initFilter();
+        syncNowPlaying(null);
+        render(getFilteredData());
+        renderRecent();
+        updateStats();
+    </script>
+</body>
+
+</html>
